@@ -28,8 +28,8 @@ declare global {
   var __nexusSupportTickets: SupportTicket[] | undefined
 }
 
-if (!global.__nexusSupportTickets) {
-  global.__nexusSupportTickets = []
+if (!globalThis.__nexusSupportTickets) {
+  globalThis.__nexusSupportTickets = []
 }
 
 export async function GET(request: NextRequest) {
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   const ticketId = searchParams.get("ticketId")
   const status = searchParams.get("status")
 
-  let tickets = global.__nexusSupportTickets || []
+  let tickets = globalThis.__nexusSupportTickets || []
 
   if (ticketId) {
     const ticket = tickets.find((t) => t.id === ticketId)
@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
         messages: [],
       }
 
-      global.__nexusSupportTickets = global.__nexusSupportTickets || []
-      global.__nexusSupportTickets.unshift(ticket)
+      globalThis.__nexusSupportTickets = globalThis.__nexusSupportTickets || []
+      globalThis.__nexusSupportTickets.unshift(ticket)
 
       return NextResponse.json({ success: true, ticket })
     }
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Missing ticketId or content" }, { status: 400 })
       }
 
-      const tickets = global.__nexusSupportTickets || []
+      const tickets = globalThis.__nexusSupportTickets || []
       const ticketIndex = tickets.findIndex((t) => t.id === ticketId)
 
       if (ticketIndex === -1) {
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
-      const tickets = global.__nexusSupportTickets || []
+      const tickets = globalThis.__nexusSupportTickets || []
       const ticketIndex = tickets.findIndex((t) => t.id === ticketId)
 
       if (ticketIndex === -1) {

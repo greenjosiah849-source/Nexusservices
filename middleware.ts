@@ -19,16 +19,16 @@ interface VisitorLog {
   method: string
 }
 
-if (!global.__nexusVisitorLogs) {
-  global.__nexusVisitorLogs = []
+if (!globalThis.__nexusVisitorLogs) {
+  globalThis.__nexusVisitorLogs = []
 }
 
-if (!global.__nexusRateLimits) {
-  global.__nexusRateLimits = new Map()
+if (!globalThis.__nexusRateLimits) {
+  globalThis.__nexusRateLimits = new Map()
 }
 
-if (!global.__nexusSecurityBlocks) {
-  global.__nexusSecurityBlocks = new Set()
+if (!globalThis.__nexusSecurityBlocks) {
+  globalThis.__nexusSecurityBlocks = new Set()
 }
 
 const RATE_LIMIT_WINDOW = 60 * 1000
@@ -47,7 +47,7 @@ function getClientIP(request: NextRequest): string {
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now()
-  const limits = global.__nexusRateLimits!
+  const limits = globalThis.__nexusRateLimits!
 
   const entry = limits.get(ip)
   if (!entry || entry.resetAt < now) {
@@ -76,9 +76,9 @@ function logVisitor(request: NextRequest, ip: string) {
     method: request.method,
   }
 
-  global.__nexusVisitorLogs!.unshift(log)
-  if (global.__nexusVisitorLogs!.length > 5000) {
-    global.__nexusVisitorLogs = global.__nexusVisitorLogs!.slice(0, 5000)
+  globalThis.__nexusVisitorLogs!.unshift(log)
+  if (globalThis.__nexusVisitorLogs!.length > 5000) {
+    globalThis.__nexusVisitorLogs = globalThis.__nexusVisitorLogs!.slice(0, 5000)
   }
 }
 
@@ -125,7 +125,7 @@ export default function middleware(request: NextRequest) {
   const ip = getClientIP(request)
   const path = request.nextUrl.pathname
 
-  if (global.__nexusSecurityBlocks!.has(ip)) {
+  if (globalThis.__nexusSecurityBlocks!.has(ip)) {
     return new NextResponse(JSON.stringify({ error: "Access Denied", code: "ZTN_ERR_BLOCKED" }), {
       status: 403,
       headers: {
@@ -137,7 +137,7 @@ export default function middleware(request: NextRequest) {
   }
 
   if (isMaliciousRequest(request)) {
-    global.__nexusSecurityBlocks!.add(ip)
+    globalThis.__nexusSecurityBlocks!.add(ip)
     return new NextResponse(JSON.stringify({ error: "Forbidden", code: "ZTN_ERR_SECURITY" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },

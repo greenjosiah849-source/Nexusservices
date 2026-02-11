@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const limit = Number.parseInt(searchParams.get("limit") || "100")
 
-  const logs = global.__nexusVisitorLogs || []
+  const logs = globalThis.__nexusVisitorLogs || []
 
   const uniqueIPs = new Set(logs.map((l) => l.ip))
   const pageViews: Record<string, number> = {}

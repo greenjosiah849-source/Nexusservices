@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
       }
       const visitorLimit = Math.min(Number(searchParams.get("limit")) || 100, 500)
-      const visitors = global.__nexusVisitorLogs || []
+      const visitors = globalThis.__nexusVisitorLogs || []
       const uniqueIPs = new Set(visitors.map((v) => v.ip))
       return NextResponse.json({
         visitors: visitors.slice(0, visitorLimit),
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       if (getRankLevel(admin.rank) < 40) {
         return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
       }
-      const tickets = global.__nexusSupportTickets || []
+      const tickets = globalThis.__nexusSupportTickets || []
       return NextResponse.json({
         tickets,
         stats: {
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
         if (getRankLevel(admin.rank) < 80) {
           return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
         }
-        global.__nexusVisitorLogs = []
+        globalThis.__nexusVisitorLogs = []
         logAdminAction("clear-visitors", admin.username, "Cleared all visitor logs")
         return NextResponse.json({ success: true })
 
@@ -248,7 +248,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
         }
         const { ticketId, status: ticketStatus, assignTo, reply } = body
-        const tickets = global.__nexusSupportTickets || []
+        const tickets = globalThis.__nexusSupportTickets || []
         const ticketIndex = tickets.findIndex((t) => t.id === ticketId)
         
         if (ticketIndex === -1) {

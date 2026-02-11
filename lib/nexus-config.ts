@@ -54,18 +54,18 @@ declare global {
 }
 
 function initializeGlobals() {
-  if (global.__nexusInitialized) return
+  if (globalThis.__nexusInitialized) return
 
-  if (!global.__nexusApiStatus) {
-    global.__nexusApiStatus = {
+  if (!globalThis.__nexusApiStatus) {
+    globalThis.__nexusApiStatus = {
       enabled: true,
       lastToggled: new Date().toISOString(),
       toggledBy: "system",
     }
   }
 
-  if (!global.__nexusAdmins) {
-    global.__nexusAdmins = new Map([
+  if (!globalThis.__nexusAdmins) {
+    globalThis.__nexusAdmins = new Map([
       [
         "ZA6VP",
         {
@@ -79,23 +79,23 @@ function initializeGlobals() {
     ])
   }
 
-  if (!global.__nexusUsageLogs) {
-    global.__nexusUsageLogs = []
+  if (!globalThis.__nexusUsageLogs) {
+    globalThis.__nexusUsageLogs = []
   }
 
-  if (!global.__nexusBlockedSessions) {
-    global.__nexusBlockedSessions = new Map()
+  if (!globalThis.__nexusBlockedSessions) {
+    globalThis.__nexusBlockedSessions = new Map()
   }
 
-  if (!global.__nexusActiveSessions) {
-    global.__nexusActiveSessions = new Map()
+  if (!globalThis.__nexusActiveSessions) {
+    globalThis.__nexusActiveSessions = new Map()
   }
 
-  if (!global.__nexusAdminLogs) {
-    global.__nexusAdminLogs = []
+  if (!globalThis.__nexusAdminLogs) {
+    globalThis.__nexusAdminLogs = []
   }
 
-  global.__nexusInitialized = true
+  globalThis.__nexusInitialized = true
 }
 
 initializeGlobals()
@@ -126,8 +126,8 @@ export function parseSessionToken(encodedToken: string): { username: string; tok
 }
 
 export function logAdminAction(action: string, performedBy: string, details: string) {
-  if (!global.__nexusAdminLogs) {
-    global.__nexusAdminLogs = []
+  if (!globalThis.__nexusAdminLogs) {
+    globalThis.__nexusAdminLogs = []
   }
 
   const log: AdminActionLog = {
@@ -138,9 +138,9 @@ export function logAdminAction(action: string, performedBy: string, details: str
     timestamp: new Date().toISOString(),
   }
 
-  global.__nexusAdminLogs.unshift(log)
-  if (global.__nexusAdminLogs.length > 1000) {
-    global.__nexusAdminLogs = global.__nexusAdminLogs.slice(0, 1000)
+  globalThis.__nexusAdminLogs.unshift(log)
+  if (globalThis.__nexusAdminLogs.length > 1000) {
+    globalThis.__nexusAdminLogs = globalThis.__nexusAdminLogs.slice(0, 1000)
   }
 }
 
@@ -149,40 +149,40 @@ class NexusStore {
 
   get apiStatus(): ApiStatus {
     initializeGlobals()
-    return global.__nexusApiStatus!
+    return globalThis.__nexusApiStatus!
   }
 
   set apiStatus(value: ApiStatus) {
-    global.__nexusApiStatus = value
+    globalThis.__nexusApiStatus = value
   }
 
   get admins(): Map<string, NexusAdmin> {
     initializeGlobals()
-    return global.__nexusAdmins!
+    return globalThis.__nexusAdmins!
   }
 
   get usageLogs(): ApiUsageLog[] {
     initializeGlobals()
-    return global.__nexusUsageLogs!
+    return globalThis.__nexusUsageLogs!
   }
 
   set usageLogs(value: ApiUsageLog[]) {
-    global.__nexusUsageLogs = value
+    globalThis.__nexusUsageLogs = value
   }
 
   get blockedSessions(): Map<string, BlockedSession> {
     initializeGlobals()
-    return global.__nexusBlockedSessions!
+    return globalThis.__nexusBlockedSessions!
   }
 
   get activeSessions(): Map<string, { token: string; username: string; expiresAt: number }> {
     initializeGlobals()
-    return global.__nexusActiveSessions!
+    return globalThis.__nexusActiveSessions!
   }
 
   get adminLogs(): AdminActionLog[] {
     initializeGlobals()
-    return global.__nexusAdminLogs!
+    return globalThis.__nexusAdminLogs!
   }
 
   private constructor() {}
@@ -200,9 +200,9 @@ class NexusStore {
       ...log,
       id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     }
-    global.__nexusUsageLogs!.unshift(entry)
-    if (global.__nexusUsageLogs!.length > 10000) {
-      global.__nexusUsageLogs = global.__nexusUsageLogs!.slice(0, 10000)
+    globalThis.__nexusUsageLogs!.unshift(entry)
+    if (globalThis.__nexusUsageLogs!.length > 10000) {
+      globalThis.__nexusUsageLogs = globalThis.__nexusUsageLogs!.slice(0, 10000)
     }
   }
 
@@ -213,7 +213,7 @@ class NexusStore {
     const lastHour = now - 60 * 60 * 1000
     const lastMinute = now - 60 * 1000
 
-    const logs = global.__nexusUsageLogs!
+    const logs = globalThis.__nexusUsageLogs!
     const recentLogs = logs.filter((l) => new Date(l.timestamp).getTime() > last24h)
     const hourLogs = logs.filter((l) => new Date(l.timestamp).getTime() > lastHour)
     const minuteLogs = logs.filter((l) => new Date(l.timestamp).getTime() > lastMinute)
@@ -265,7 +265,7 @@ class NexusStore {
       "/api/roblox/all-assets",
     ]
 
-    const logs = global.__nexusUsageLogs!
+    const logs = globalThis.__nexusUsageLogs!
 
     return endpoints.map((endpoint) => {
       const recentLogs = logs.filter((l) => l.endpoint === endpoint).slice(0, 100)
