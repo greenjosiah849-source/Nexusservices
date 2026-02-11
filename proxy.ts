@@ -121,7 +121,7 @@ function isMaliciousRequest(request: NextRequest): boolean {
   return false
 }
 
-export function proxy(request: NextRequest) {
+export default function middleware(request: NextRequest) {
   const ip = getClientIP(request)
   const path = request.nextUrl.pathname
 
@@ -165,7 +165,7 @@ export function proxy(request: NextRequest) {
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
   response.headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://*.roblox.com https://*.rbxcdn.com; frame-ancestors 'none';",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com; connect-src 'self' https://*.roblox.com https://*.rbxcdn.com https://*.vercel.app; frame-ancestors 'none';",
   )
   response.headers.set("X-Powered-By", "Nexus Services by Zauataun")
   response.headers.set("X-Nexus-Version", "1.0.0")

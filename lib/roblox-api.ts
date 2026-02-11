@@ -253,46 +253,58 @@ export async function getPlacesByUniverse(universeId: number): Promise<Paginated
 }
 
 export async function getGamePassesByUniverse(universeId: number, _rootPlaceId?: number): Promise<GamePass[]> {
-  // Method 1: NEW API endpoint (as of Sept 2025) - apis.roblox.com with passView=Full
-  const url1 = `https://apis.roblox.com/game-passes/v1/universes/${universeId}/game-passes?sortOrder=Asc&limit=100&passView=Full`
-  const response1 = await fetchRoblox<{
-    pageItems?: Array<{
-      id: number
-      name: string
-      displayName?: string
-      description?: string
-      price: number | null
-      iconId?: number
-      productId?: number
-    }>
-    data?: Array<{
-      id: number
-      name: string
-      displayName?: string
-      description?: string
-      price: number | null
-      iconId?: number
-      productId?: number
-    }>
-    nextPageCursor?: string
-  }>(url1)
+  // Method 1: Legacy games.roblox.com endpoint - most reliable for server-side fetching
+  const allGamePasses: GamePass[] = []
+  let cursor: string | undefined = undefined
 
-  const items1 = response1?.pageItems || response1?.data
-  if (items1 && items1.length > 0) {
-    return items1.map((gp) => ({
-      id: gp.id,
-      name: gp.displayName || gp.name,
-      displayName: gp.displayName || gp.name,
-      description: gp.description,
-      price: gp.price,
-      iconId: gp.iconId,
-      productId: gp.productId,
-      iconImageAssetId: gp.iconId,
-      universeId,
-    }))
+  do {
+    const url = new URL(`https://games.roblox.com/v1/games/${universeId}/game-passes`)
+    url.searchParams.set("sortOrder", "Asc")
+    url.searchParams.set("limit", "100")
+    if (cursor) url.searchParams.set("cursor", cursor)
+
+    const response = await fetchRoblox<{
+      data?: Array<{
+        id: number
+        name: string
+        displayName?: string
+        description?: string
+        price: number | null
+        sellerName?: string
+        sellerId?: number
+        productId?: number
+        iconImageAssetId?: number
+      }>
+      nextPageCursor?: string | null
+      previousPageCursor?: string | null
+    }>(url.toString())
+
+    if (response?.data && response.data.length > 0) {
+      for (const gp of response.data) {
+        allGamePasses.push({
+          id: gp.id,
+          name: gp.displayName || gp.name,
+          displayName: gp.displayName || gp.name,
+          description: gp.description,
+          price: gp.price,
+          sellerName: gp.sellerName,
+          sellerId: gp.sellerId,
+          productId: gp.productId,
+          iconImageAssetId: gp.iconImageAssetId,
+          universeId,
+        })
+      }
+      cursor = response.nextPageCursor || undefined
+    } else {
+      cursor = undefined
+    }
+  } while (cursor)
+
+  if (allGamePasses.length > 0) {
+    return allGamePasses
   }
 
-  // Method 2: Try without passView param
+  // Method 2: Fallback to apis.roblox.com endpoint
   const url2 = `https://apis.roblox.com/game-passes/v1/universes/${universeId}/game-passes?sortOrder=Asc&limit=100`
   const response2 = await fetchRoblox<{
     pageItems?: Array<{
@@ -302,14 +314,16 @@ export async function getGamePassesByUniverse(universeId: number, _rootPlaceId?:
       description?: string
       price: number | null
       iconId?: number
+      productId?: number
     }>
     data?: Array<{
       id: number
       name: string
       displayName?: string
-      description?: string  
+      description?: string
       price: number | null
       iconId?: number
+      productId?: number
     }>
   }>(url2)
 
@@ -322,6 +336,7 @@ export async function getGamePassesByUniverse(universeId: number, _rootPlaceId?:
       description: gp.description,
       price: gp.price,
       iconId: gp.iconId,
+      productId: gp.productId,
       iconImageAssetId: gp.iconId,
       universeId,
     }))

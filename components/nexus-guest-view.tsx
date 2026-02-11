@@ -115,23 +115,48 @@ export function NexusGuestView({ onLogin }: NexusGuestViewProps) {
 
   const runAllTests = async () => {
     if (!testUsername) return
-    const endpoints = [
-      { path: "/api/roblox/user", params: `?username=${testUsername}` },
-      { path: "/api/roblox/universes", params: "" },
-      { path: "/api/roblox/gamepasses", params: "" },
-      { path: "/api/roblox/clothing", params: "" },
-      { path: "/api/roblox/ugc", params: "" },
-    ]
 
     // Test user first to get userId
-    await testEndpoint("/api/roblox/user", `?username=${testUsername}`)
+    const userKey = `/api/roblox/user?username=${testUsername}`
+    setTestResults((prev) => new Map(prev).set(userKey, { endpoint: "/api/roblox/user", status: "loading" }))
 
-    const userResult = testResults.get(`/api/roblox/user?username=${testUsername}`)
-    if (userResult?.data && typeof userResult.data === "object" && "id" in userResult.data) {
-      const userId = (userResult.data as { id: number }).id
-      for (const ep of endpoints.slice(1)) {
-        await testEndpoint(ep.path, `?userId=${userId}`)
+    const startTime = Date.now()
+    try {
+      const res = await fetch(`/api/roblox/user?username=${encodeURIComponent(testUsername)}`)
+      const data = await res.json()
+      const responseTime = Date.now() - startTime
+
+      setTestResults((prev) =>
+        new Map(prev).set(userKey, {
+          endpoint: "/api/roblox/user",
+          status: res.ok ? "success" : "error",
+          statusCode: res.status,
+          responseTime,
+          data: res.ok ? data : undefined,
+          error: !res.ok ? data.error || data.message : undefined,
+        }),
+      )
+
+      if (res.ok && data?.id) {
+        const userId = data.id
+        const otherEndpoints = [
+          "/api/roblox/universes",
+          "/api/roblox/gamepasses",
+          "/api/roblox/clothing",
+          "/api/roblox/ugc",
+        ]
+        for (const ep of otherEndpoints) {
+          await testEndpoint(ep, `?userId=${userId}`)
+        }
       }
+    } catch (error) {
+      setTestResults((prev) =>
+        new Map(prev).set(userKey, {
+          endpoint: "/api/roblox/user",
+          status: "error",
+          error: error instanceof Error ? error.message : "Request failed",
+        }),
+      )
     }
   }
 
