@@ -53,11 +53,29 @@ export function RobloxAssetScanner() {
       const assetsResponse = await fetch(`/api/roblox/all-assets?userId=${user.id}`)
 
       if (!assetsResponse.ok) {
-        throw new Error("Failed to fetch assets")
+        const errData = await assetsResponse.json().catch(() => ({}))
+        throw new Error(errData.error || "Failed to fetch assets")
       }
 
       const data = await assetsResponse.json()
-      setResult(data)
+
+      // Ensure we have the assets array and breakdown
+      setResult({
+        userId: data.userId,
+        totalAssets: data.totalAssets || 0,
+        assets: data.assets || [
+          ...(data.universes || []),
+          ...(data.gamepasses || []),
+          ...(data.clothing || []),
+          ...(data.ugc || []),
+        ],
+        breakdown: data.breakdown || {
+          universes: (data.universes || []).length,
+          gamePasses: (data.gamepasses || []).length,
+          clothing: (data.clothing || []).length,
+          ugc: (data.ugc || []).length,
+        },
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {

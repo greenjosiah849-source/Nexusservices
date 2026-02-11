@@ -101,11 +101,12 @@ export async function GET(request: NextRequest) {
 
     logApiRequest(request, 200, startTime, undefined, userId)
 
-    // Return in a format compatible with Roblox HttpService
+    // Return in a format compatible with both the website scanner and Roblox HttpService
     return NextResponse.json({
       success: true,
       userId: userIdNum,
       totalAssets: allAssets.length,
+      assets: allAssets,
       universes: universeAssets,
       gamepasses: gamePassAssets,
       clothing: clothingAssets,
